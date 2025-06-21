@@ -1,7 +1,7 @@
 name: "🚀 Widget Request"
 description: "Предложите идею для нового виджета"
-title: "[New Widget] название"
-labels: ["request"]
+title: "[New Widget] название_виджета"
+labels: ["enhancement"]
 body:
   - type: textarea
     id: description
@@ -31,5 +31,6 @@ body:
         - "Критично (без этого нельзя играть)"
         - "Важно (улучшит игру)"
         - "Удобство (дополнительная фича)"
+      default: 2
     validations:
       required: true
