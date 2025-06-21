@@ -1,0 +1,35 @@
+name: "🚀 Widget Request"
+description: "Предложите идею для нового виджета"
+title: "[New Widget] название"
+labels: ["request"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Опишите идею"
+      placeholder: "Что должен делать виджет? Какую проблему он решает?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: "Примеры из игр"
+      placeholder: "В какой игре (D&D, Pathfinder, и т.д.) пригодился бы такой виджет? Для чего он там использовался бы?"
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: "Аналоги в других приложениях"
+      placeholder: "Есть ли аналоги в других приложениях (D&D Beyond, Roll20 и т.д.)?"
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Насколько это важно?"
+      options:
+        - "Критично (без этого нельзя играть)"
+        - "Важно (улучшит игру)"
+        - "Удобство (дополнительная фича)"
+    validations:
+      required: true
