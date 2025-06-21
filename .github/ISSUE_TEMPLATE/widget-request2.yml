@@ -18,7 +18,7 @@ body:
       placeholder: "В какой игре (D&D, Pathfinder, и т.д.) пригодился бы такой виджет? Для чего он там использовался бы?"
 
   - type: textarea
-    id: examples
+    id: analogs
     attributes:
       label: "Аналоги в других приложениях"
       placeholder: "Есть ли аналоги в других приложениях (D&D Beyond, Roll20 и т.д.)?"
