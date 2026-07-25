@@ -1,0 +1,62 @@
+name: Docs CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+# A newer push should win; half-finished deploys are not worth waiting for.
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: Starlight derives each page's "last updated" date from the
+          # git log of that file. A shallow clone would stamp every page with the
+          # date of the single fetched commit, in the footer and in the JSON-LD.
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit
+
+      - name: Build
+        run: npm run build
+
+      - name: Check internal links
+        run: npm run check:links
+
+      - name: Check structured data
+        run: npm run check:jsonld
+
+      - name: Upload
+        env:
+          # Served by nginx at https://longstoryshort.app/doc/
+          # Kept outside the app's webroot: the Long Story Short deploy rsyncs with
+          # --delete and would otherwise wipe the docs on every release.
+          TARGET: ${{ vars.DOCS_WWW_PATH || '/var/www/lss-doc/doc' }}
+        run: |
+          set -euo pipefail
+          # rsync --delete into a wrong or empty path would be destructive.
+          case "$TARGET" in
+            /var/www/?*) ;;
+            *) echo "Refusing to deploy to '$TARGET'"; exit 1 ;;
+          esac
+          test -d dist
+          mkdir -p "$TARGET"
+          rsync -ahW --no-compress --delete "dist/" "$TARGET/"
