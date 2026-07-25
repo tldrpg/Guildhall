@@ -1,0 +1,199 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import starlight from '@astrojs/starlight';
+import starlightSidebarTopics from 'starlight-sidebar-topics';
+
+// https://astro.build/config
+export default defineConfig({
+    site: 'https://longstoryshort.app',
+    // Docs live at longstoryshort.app/doc/, alongside the app itself. The existing
+    // Long Story Short pages keep their URLs, so nothing indexed has to move.
+    base: '/doc',
+    // Matches the trailing-slash redirect nginx already enforces for the whole host.
+    trailingSlash: 'always',
+    integrations: [
+        // Starlight registers astro-expressive-code, which must be set up before mdx().
+        starlight({
+            title: 'База знаний',
+            description: 'Документация Long Story Short, Anima и Vortex — инструментов для настольных ролевых игр.',
+            defaultLocale: 'root',
+            locales: {
+                root: { label: 'Русский', lang: 'ru' },
+            },
+            logo: {
+                src: './src/assets/lss-logo.png',
+                alt: 'Long Story Short',
+            },
+            favicon: '/favicon.ico',
+            head: [
+                {
+                    tag: 'link',
+                    attrs: { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png' },
+                },
+                {
+                    // Same origin as the app, so the docs are part of the same installable
+                    // PWA — this is what lets the install button on /doc/character-sheet/web-app/
+                    // work. Deliberately not prefixed with `base`: the manifest is at the root.
+                    tag: 'link',
+                    attrs: { rel: 'manifest', href: '/manifest.webmanifest' },
+                },
+            ],
+            social: [
+                { icon: 'telegram', label: 'Гильдия в Telegram', href: 'https://t.me/rpg_guild' },
+                { icon: 'github', label: 'GitHub', href: 'https://github.com/tldrpg/Guildhall' },
+            ],
+            editLink: {
+                baseUrl: 'https://github.com/tldrpg/Guildhall/edit/master/',
+            },
+            lastUpdated: true,
+            customCss: ['./src/styles/custom.css'],
+            components: {
+                // Wraps the default head to append JSON-LD structured data.
+                // Note: do not override `Sidebar` here — starlight-sidebar-topics uses that
+                // slot for the topic switcher, and a config-level override wins over the
+                // plugin's, silently removing it.
+                Head: './src/components/Head.astro',
+            },
+            plugins: [
+                starlightSidebarTopics([
+                    {
+                        label: 'Long Story Short',
+                        link: '/',
+                        icon: 'open-book',
+                        id: 'lss',
+                        items: [
+                            {
+                                label: 'База знаний Long Story Short',
+                                items: [
+                                    { label: 'Введение', link: '/' },
+                                    { slug: 'main/limits', label: 'Лимиты' },
+                                ],
+                            },
+                            {
+                                label: 'Основные возможности',
+                                items: [
+                                    { slug: 'character-sheet/web-app', label: 'Приложение для Android и iOS' },
+                                    { slug: 'character-sheet/print', label: 'Скачать PDF' },
+                                    { slug: 'character-sheet/multiclass', label: 'Мультикласс' },
+                                    { slug: 'character-sheet/bonuses', label: 'Система бонусов' },
+                                    { slug: 'character-sheet/expression-input', label: 'Поля с формулами' },
+                                    { slug: 'character-sheet/advantage-disadvantage', label: 'Преимущество/Помеха' },
+                                    { slug: 'character-sheet/translations', label: 'Переводы' },
+                                ],
+                            },
+                            {
+                                label: 'Текстовый редактор',
+                                items: [
+                                    { slug: 'text-editor/resource', label: 'Ресурс' },
+                                    { slug: 'text-editor/spoiler', label: 'Спойлер' },
+                                    { slug: 'text-editor/divider', label: 'Разделитель' },
+                                    { slug: 'text-editor/dice-roller', label: 'Формулы и переменные' },
+                                ],
+                            },
+                            {
+                                label: 'Заклинания',
+                                items: [
+                                    { slug: 'spells/srd', label: 'Где остальные?' },
+                                    { slug: 'spells/addition', label: 'Добавление собственных' },
+                                    { slug: 'spells/cards', label: 'Карточки заклинаний' },
+                                ],
+                            },
+                            {
+                                label: 'Интеграции',
+                                items: [{ slug: 'integration/owlbear', label: 'Owlbear Rodeo' }],
+                            },
+                            {
+                                label: 'Полезные руководства',
+                                items: [
+                                    { slug: 'user-guides/social-login', label: 'Соц. вход' },
+                                    { slug: 'user-guides/account-migration', label: 'Миграция с Google' },
+                                ],
+                            },
+                            {
+                                label: 'Прочее',
+                                items: [
+                                    { slug: 'misc/character-creation', label: 'Как заполнять лист персонажа?' },
+                                    { slug: 'misc/aime', label: 'Приключения в Средиземье' },
+                                    { slug: 'misc/links', label: 'Полезные ссылки' },
+                                    { slug: 'misc/license', label: 'Лицензия' },
+                                ],
+                            },
+                            {
+                                // Пресеты мессенджеров скоро отключат, их заменяет Vortex.
+                                // Держим внизу и с бейджем, чтобы никто не начинал с них.
+                                label: 'Устаревшее',
+                                items: [
+                                    {
+                                        slug: 'character-sheet/telegram',
+                                        label: 'Пресеты Telegram',
+                                        badge: { text: 'Устарело', variant: 'caution' },
+                                    },
+                                    {
+                                        slug: 'character-sheet/discord',
+                                        label: 'Пресеты Discord',
+                                        badge: { text: 'Устарело', variant: 'caution' },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        label: 'Anima',
+                        link: '/anima/',
+                        icon: 'pencil',
+                        id: 'anima',
+                        items: [
+                            { slug: 'anima', label: 'Обзор' },
+                            { slug: 'anima/getting-started' },
+                            { slug: 'anima/sheets-management' },
+                            { slug: 'anima/creating-templates' },
+                            {
+                                label: 'Виджеты',
+                                items: [
+                                    { slug: 'anima/widgets' },
+                                    { slug: 'anima/widgets/mod' },
+                                    { slug: 'anima/widgets/input' },
+                                    { slug: 'anima/widgets/label' },
+                                    { slug: 'anima/widgets/checkbox' },
+                                    { slug: 'anima/widgets/counter' },
+                                    { slug: 'anima/widgets/counter-dots' },
+                                    { slug: 'anima/widgets/container' },
+                                    { slug: 'anima/widgets/styling' },
+                                ],
+                            },
+                            { slug: 'anima/formulas-and-variables' },
+                            { slug: 'anima/rolling-dice' },
+                            { slug: 'anima/notation' },
+                            { slug: 'anima/recipes' },
+                            { slug: 'anima/faq' },
+                        ],
+                    },
+                    {
+                        label: 'Vortex',
+                        link: '/vortex/about/',
+                        icon: 'comment',
+                        id: 'vortex',
+                        items: [
+                            { slug: 'vortex/about', label: 'Общее описание' },
+                            { slug: 'vortex/adding-characters', label: 'Добавление персонажей' },
+                            { slug: 'vortex/telegram', label: 'Отправлять броски в Telegram' },
+                            { slug: 'vortex/discord', label: 'Отправлять броски в Discord' },
+                        ],
+                    },
+                    {
+                        label: 'Разработчикам',
+                        link: '/developers/',
+                        icon: 'puzzle',
+                        id: 'developers',
+                        items: [
+                            { slug: 'developers', label: 'Встраивание листа' },
+                            { slug: 'developers/bridge', label: 'Мосты для VTT' },
+                        ],
+                    },
+                ]),
+            ],
+        }),
+        mdx(),
+    ],
+});

@@ -1,0 +1,68 @@
+/* Display and mono faces taken from the app, so the docs read as the same product.
+   Paths carry the `/doc` base prefix — Astro does not rewrite url() in CSS. */
+@font-face {
+    font-family: 'PT Serif';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local('PT Serif Bold'), local('PTSerif-Bold'),
+        url('/doc/fonts/pt-serif-700.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'PT Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('PT Mono'), url('/doc/fonts/pt-mono-regular.woff2') format('woff2');
+}
+
+/* Accent palette shared by all three products (Long Story Short, Anima, Vortex). */
+:root {
+    --sl-color-accent-low: #241c4f;
+    --sl-color-accent: #6a44d4;
+    --sl-color-accent-high: #c6b6f2;
+
+    /* Brand tokens lifted from the app's _colors.scss. */
+    --lss-blue: #4776e6;
+    --lss-purple: #8e54e9;
+    --lss-green: #66a8a9;
+    --lss-yellow: #fbd46d;
+    --lss-ink: #07031a;
+    --lss-paper: #f7f9ff;
+    --lss-display: 'PT Serif', Georgia, 'Times New Roman', serif;
+    --lss-mono: 'PT Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root[data-theme='light'] {
+    --sl-color-accent-low: #e5ddfa;
+    --sl-color-accent: #6f45d9;
+    --sl-color-accent-high: #2c1a5e;
+}
+
+/* The site title sits next to the logo mark, so keep it visually quiet. */
+.site-title {
+    font-weight: 600;
+}
+
+/* Docs are dense with tables of fields and variables — let them breathe and scroll. */
+.sl-markdown-content table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.sl-markdown-content table th,
+.sl-markdown-content table td {
+    white-space: normal;
+}
+
+/* Inline code holds formula snippets like `[local-modifier]`; make it readable. */
+.sl-markdown-content :not(pre) > code {
+    font-size: 0.9em;
+}
+
+/* Screenshots are the bulk of the Long Story Short pages — keep them tidy. */
+.sl-markdown-content img {
+    border-radius: 0.5rem;
+}

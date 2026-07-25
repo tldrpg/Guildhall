@@ -1,0 +1,91 @@
+---
+/**
+ * Restores the PWA install button that lived in the Gatsby docs.
+ *
+ * The docs are served from the same origin as the app (longstoryshort.app/doc/),
+ * so the app's manifest and its service worker (scope `/`) also cover these pages.
+ * That is everything Chrome needs to fire `beforeinstallprompt` here.
+ *
+ * The button hides itself when the browser does not offer installation — either
+ * the app is already installed, or the browser does not support the prompt
+ * (Safari/iOS never fires it, which is why the manual instructions stay below).
+ */
+---
+
+<div class="install" data-install hidden>
+    <button type="button" data-install-button>Установить приложение</button>
+</div>
+
+<script>
+    // Not part of the standard DOM lib — Chromium-only, so declare what we use.
+    interface BeforeInstallPromptEvent extends Event {
+        prompt: () => Promise<void>;
+        userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+    }
+
+    const container = document.querySelector('[data-install]');
+    const button = document.querySelector('[data-install-button]');
+
+    if (container instanceof HTMLElement && button instanceof HTMLButtonElement) {
+        let deferredPrompt: BeforeInstallPromptEvent | null = null;
+
+        // A service worker controlling the page is required for the prompt. Visitors
+        // who land on the docs first may not have one yet, so register the app's.
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration('/').then((registration) => {
+                if (!registration) {
+                    navigator.serviceWorker.register('/sw.js').catch(() => {
+                        // Installation is a nice-to-have; the manual steps below still work.
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredPrompt = event as BeforeInstallPromptEvent;
+            container.hidden = false;
+        });
+
+        button.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+
+            deferredPrompt = null;
+            if (outcome === 'accepted') container.hidden = true;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            container.hidden = true;
+        });
+    }
+</script>
+
+<style>
+    .install {
+        margin: 1.5rem 0;
+    }
+
+    .install[hidden] {
+        display: none;
+    }
+
+    .install button {
+        padding: 0.6rem 1.2rem;
+        border: 1px solid var(--sl-color-accent);
+        border-radius: 0.5rem;
+        background: var(--sl-color-accent);
+        color: var(--sl-color-white);
+        font-size: var(--sl-text-base);
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .install button:hover {
+        background: var(--sl-color-accent-high);
+        border-color: var(--sl-color-accent-high);
+        color: var(--sl-color-black);
+    }
+</style>

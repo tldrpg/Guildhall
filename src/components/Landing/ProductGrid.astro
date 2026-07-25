@@ -1,0 +1,58 @@
+---
+import ProductCard from './ProductCard.astro';
+import SheetGlyph from './glyphs/SheetGlyph.astro';
+import AnimaGlyph from './glyphs/AnimaGlyph.astro';
+import VortexGlyph from './glyphs/VortexGlyph.astro';
+---
+
+<div class="grid">
+    <ProductCard
+        title="Лист персонажа"
+        href="/doc/character-sheet/web-app/"
+        tagline="Заполняемый лист для D&D 5e и Приключений в Средиземье: бонусы, формулы, заклинания, печать в PDF."
+        accent="blue"
+        links={[
+            { text: 'Возможности', href: '/doc/character-sheet/web-app/' },
+            { text: 'Текстовый редактор', href: '/doc/text-editor/resource/' },
+            { text: 'Заклинания', href: '/doc/spells/srd/' },
+        ]}
+    >
+        <SheetGlyph slot="glyph" />
+    </ProductCard>
+
+    <ProductCard
+        title="Anima"
+        href="/doc/anima/"
+        tagline="Конструктор листов под любую систему: свои виджеты, формулы и броски на холсте с сеткой."
+        accent="purple"
+        links={[
+            { text: 'Начало работы', href: '/doc/anima/getting-started/' },
+            { text: 'Виджеты', href: '/doc/anima/widgets/' },
+            { text: 'Нотация формул', href: '/doc/anima/notation/' },
+        ]}
+    >
+        <AnimaGlyph slot="glyph" />
+    </ProductCard>
+
+    <ProductCard
+        title="Vortex"
+        href="/doc/vortex/about/"
+        tagline="Комнаты для персонажей: общий стол и броски, улетающие в Telegram и Discord."
+        accent="green"
+        links={[
+            { text: 'Общее описание', href: '/doc/vortex/about/' },
+            { text: 'Добавление персонажей', href: '/doc/vortex/adding-characters/' },
+        ]}
+    >
+        <VortexGlyph slot="glyph" />
+    </ProductCard>
+</div>
+
+<style>
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 3.5rem;
+    }
+</style>

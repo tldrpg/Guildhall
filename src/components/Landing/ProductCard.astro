@@ -1,0 +1,146 @@
+---
+interface ProductCardLink {
+    text: string;
+    href: string;
+}
+
+interface ProductCardProps {
+    title: string;
+    href: string;
+    tagline: string;
+    accent: 'blue' | 'purple' | 'green';
+    links: ProductCardLink[];
+}
+
+const { title, href, tagline, accent, links } = Astro.props as ProductCardProps;
+---
+
+<article class:list={['card', accent]}>
+    <div class="glyph" aria-hidden="true">
+        <slot name="glyph" />
+    </div>
+
+    <h2>
+        <a href={href}>{title}</a>
+    </h2>
+    <p class="tagline">{tagline}</p>
+
+    <ul class="links">
+        {
+            links.map((link) => (
+                <li>
+                    <a href={link.href}>{link.text}</a>
+                </li>
+            ))
+        }
+    </ul>
+</article>
+
+<style>
+    .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 1rem;
+        /* gray-6 is Starlight's raised surface: it flips correctly between themes. */
+        background: var(--sl-color-gray-6);
+        transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .card:hover {
+        border-color: var(--card-accent);
+        transform: translateY(-2px);
+    }
+
+    /* A coloured hairline at the top ties the card to its product. */
+    .card::before {
+        content: '';
+        position: absolute;
+        inset: -1px -1px auto -1px;
+        height: 3px;
+        border-radius: 1rem 1rem 0 0;
+        background: var(--card-accent);
+    }
+
+    .blue {
+        --card-accent: var(--lss-blue);
+    }
+
+    .purple {
+        --card-accent: var(--lss-purple);
+    }
+
+    .green {
+        --card-accent: var(--lss-green);
+    }
+
+    .glyph {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+        color: var(--card-accent);
+    }
+
+    h2 {
+        margin: 0;
+        font-family: var(--lss-display);
+        font-size: var(--sl-text-2xl);
+        line-height: 1.2;
+    }
+
+    h2 a {
+        color: var(--sl-color-white);
+        text-decoration: none;
+    }
+
+    /* Make the whole card clickable without nesting interactive elements. */
+    h2 a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 1rem;
+    }
+
+    h2 a:hover {
+        color: var(--card-accent);
+    }
+
+    .tagline {
+        margin: 0.6rem 0 1.25rem;
+        font-size: var(--sl-text-sm);
+        line-height: 1.6;
+        color: var(--sl-color-gray-3);
+    }
+
+    .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 1rem;
+        margin: auto 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: var(--sl-text-sm);
+    }
+
+    /* Sits above the card-wide click target so these stay individually clickable. */
+    .links a {
+        position: relative;
+        z-index: 1;
+        color: var(--sl-color-gray-2);
+        text-decoration: none;
+        border-bottom: 1px solid var(--sl-color-gray-5);
+    }
+
+    .links a:hover {
+        color: var(--card-accent);
+        border-bottom-color: var(--card-accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .card:hover {
+            transform: none;
+        }
+    }
+</style>

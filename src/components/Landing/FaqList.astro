@@ -1,0 +1,12 @@
+---
+import FaqItem from './FaqItem.astro';
+import { faq } from '../../data/faq';
+---
+
+{
+    faq.map((entry) => (
+        <FaqItem question={entry.question}>
+            <p set:html={entry.answer} />
+        </FaqItem>
+    ))
+}

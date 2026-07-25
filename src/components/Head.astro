@@ -1,0 +1,11 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+import JsonLd from './JsonLd.astro';
+
+// The 404 page is not a document — describing it as an article would be wrong,
+// and it is served with a 404 status anyway.
+const isNotFound = Astro.locals.starlightRoute.id === '404';
+---
+
+<Default />
+{!isNotFound && <JsonLd />}

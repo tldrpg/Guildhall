@@ -1,0 +1,119 @@
+---
+/**
+ * Structured data for every docs page.
+ *
+ * Emitted as a single @graph so the nodes can reference each other by @id instead
+ * of being repeated. The FAQ block is built from the same data the page renders
+ * (`src/data/faq.ts`) — search engines require the markup to match visible content.
+ */
+import { faq } from '../data/faq';
+
+const { starlightRoute, starlightSidebarTopics } = Astro.locals;
+const { entry, lastUpdated, siteTitle } = starlightRoute;
+
+const site = Astro.site ?? new URL('https://longstoryshort.app');
+const canonical = new URL(Astro.url.pathname, site).href;
+const docsRoot = new URL(`${import.meta.env.BASE_URL.replace(/\/$/, '')}/`, site).href;
+
+const websiteId = `${docsRoot}#website`;
+const organizationId = `${new URL('/', site).href}#organization`;
+
+const isFaqPage = entry.data.faq === true;
+const isDocsRoot = canonical === docsRoot;
+
+/** Topic links come from plugin config, which is written without the base prefix. */
+const withBase = (link: string) => {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    return link.startsWith(`${base}/`) ? link : `${base}${link}`;
+};
+
+/**
+ * schema.org accepts only a small set of tags inside `acceptedAnswer`. Anything else
+ * (`<code>`, for instance) is dropped while keeping its text, so the answer still
+ * reads the same as the rendered one.
+ */
+const ANSWER_TAGS = /^(?:a|p|b|strong|i|em|br|ul|ol|li|div|h[1-6])$/;
+
+const forStructuredData = (html: string) =>
+    html.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (tag, name) =>
+        ANSWER_TAGS.test(String(name).toLowerCase()) ? tag : ''
+    );
+
+const currentTopic = starlightSidebarTopics?.topics?.find((topic) => topic.isCurrent);
+
+const breadcrumb = [{ name: siteTitle, item: docsRoot }];
+
+if (currentTopic) {
+    const topicUrl = new URL(withBase(currentTopic.link), site).href;
+    if (topicUrl !== docsRoot) {
+        breadcrumb.push({ name: currentTopic.label, item: topicUrl });
+    }
+}
+
+if (!isDocsRoot && breadcrumb.at(-1)?.item !== canonical) {
+    breadcrumb.push({ name: entry.data.title, item: canonical });
+}
+
+const organization = {
+    '@type': 'Organization',
+    '@id': organizationId,
+    name: 'Long Story Short',
+    url: new URL('/', site).href,
+    logo: new URL('/icons/icon-512x512.png', site).href,
+};
+
+const website = {
+    '@type': 'WebSite',
+    '@id': websiteId,
+    name: siteTitle,
+    url: docsRoot,
+    inLanguage: 'ru-RU',
+    publisher: { '@id': organizationId },
+};
+
+const page = isFaqPage
+    ? {
+          '@type': 'FAQPage',
+          '@id': `${canonical}#page`,
+          name: entry.data.title,
+          description: entry.data.description,
+          url: canonical,
+          inLanguage: 'ru-RU',
+          isPartOf: { '@id': websiteId },
+          mainEntity: faq.map((item) => ({
+              '@type': 'Question',
+              name: item.question,
+              acceptedAnswer: { '@type': 'Answer', text: forStructuredData(item.answer) },
+          })),
+      }
+    : {
+          '@type': 'TechArticle',
+          '@id': `${canonical}#page`,
+          headline: entry.data.title,
+          description: entry.data.description,
+          url: canonical,
+          inLanguage: 'ru-RU',
+          isPartOf: { '@id': websiteId },
+          publisher: { '@id': organizationId },
+          ...(lastUpdated ? { dateModified: lastUpdated.toISOString() } : {}),
+      };
+
+const graph: unknown[] = [organization, website, page];
+
+if (breadcrumb.length > 1) {
+    graph.push({
+        '@type': 'BreadcrumbList',
+        '@id': `${canonical}#breadcrumb`,
+        itemListElement: breadcrumb.map((crumb, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: crumb.name,
+            item: crumb.item,
+        })),
+    });
+}
+
+const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
+---
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
