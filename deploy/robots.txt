@@ -1,0 +1,18 @@
+# robots.txt для longstoryshort.app
+#
+# Разместить в приложении: storyview/static/robots.txt — Gatsby копирует static/
+# в корень сайта. Из репозитория базы знаний этот файл положить нельзя: она
+# раздаётся из /doc/, а краулеры читают robots.txt только из корня домена.
+#
+# Сайтмапов два, потому что приложение и документация собираются раздельно.
+# Без этого файла сайтмап документации поисковики не найдут: на него ниоткуда
+# не ссылаются.
+
+User-agent: *
+Allow: /
+
+# Приложение (Gatsby)
+Sitemap: https://longstoryshort.app/sitemap-index.xml
+
+# База знаний (Astro Starlight)
+Sitemap: https://longstoryshort.app/doc/sitemap-index.xml
