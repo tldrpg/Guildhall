@@ -1,0 +1,61 @@
+---
+title: 'Anima'
+description: 'Документация Anima — конструктора листов персонажей для настольных ролевых игр.'
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+[Anima](https://anima.longstoryshort.app/) — конструктор листов персонажей для настольных ролевых игр.
+В отличие от готового листа Long Story Short для D&D 5e, здесь лист собирается под любую систему:
+из виджетов, со своими формулами и бросками.
+
+## С чего начать
+
+<CardGrid stagger>
+    <Card title="Первый персонаж" icon="rocket">
+        Авторизация, выбор шаблона и создание листа — за пять минут.
+        [Начало работы](/doc/anima/getting-started/)
+    </Card>
+    <Card title="Свой шаблон" icon="pencil">
+        Холст с сеткой, виджеты, публикация в сообщество.
+        [Создание шаблонов](/doc/anima/creating-templates/)
+    </Card>
+    <Card title="Автоматизация" icon="setting">
+        Переменные, алиасы и формулы, которые считают сами.
+        [Формулы и переменные](/doc/anima/formulas-and-variables/)
+    </Card>
+    <Card title="Броски" icon="star">
+        Дайсница, кнопки на листе и композиция из нескольких виджетов.
+        [Броски костей](/doc/anima/rolling-dice/)
+    </Card>
+</CardGrid>
+
+## Справочники
+
+<CardGrid>
+    <LinkCard
+        title="Каталог виджетов"
+        href="/doc/anima/widgets/"
+        description="Какой виджет когда брать, их поля и настройки."
+    />
+    <LinkCard
+        title="Нотация формул"
+        href="/doc/anima/notation/"
+        description="Полный синтаксис бросков: от 2d6 до групповых бросков."
+    />
+    <LinkCard
+        title="Рецепты"
+        href="/doc/anima/recipes/"
+        description="Сквозные примеры: от пустого холста до работающей кнопки."
+    />
+    <LinkCard
+        title="Вопросы и ответы"
+        href="/doc/anima/faq/"
+        description="Словарь терминов и что делать, если что-то не работает."
+    />
+</CardGrid>
+
+:::note
+Формулы Anima и [формулы листа Long Story Short](/doc/text-editor/dice-roller/) — это разные движки
+с разным синтаксисом. Примеры из одного раздела не переносятся в другой напрямую.
+:::
