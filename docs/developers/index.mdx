@@ -1,0 +1,139 @@
+---
+title: 'Встраивание листа персонажа'
+description: 'Как встроить лист персонажа Long Story Short в свой виртуальный стол через iframe и postMessage.'
+---
+
+Лист персонажа Long Story Short можно встроить в чужое приложение — виртуальный стол,
+кампанию-менеджер, что угодно — и получать оттуда броски. Так работают наши собственные
+расширения для [Owlbear Rodeo](/doc/integration/owlbear/): это не частный случай, а
+открытый механизм, доступный любому разработчику.
+
+## Как это устроено
+
+Лист остаётся на `longstoryshort.app` и открывается у вас в `iframe`. Общение идёт
+только через `window.postMessage` — ваш код никогда не читает DOM листа, его куки и
+токен авторизации.
+
+```
+Ваша страница (ваш origin)
+  └── iframe с листом (longstoryshort.app)
+        └── postMessage ──→ ваша страница
+```
+
+Границу между origin'ами держит браузер, а не договорённость: даже если бы вы захотели
+дотянуться до данных листа, у вас бы не получилось. Пользователь логинится в Long Story
+Short внутри iframe, его учётные данные вам не видны.
+
+## Что понадобится
+
+SDK берёт на себя формат конверта, согласование версии протокола и фильтрацию по origin,
+отдавая наружу типизированные события:
+
+```sh
+npm install @longstoryshort/vtt-sdk
+```
+
+Пакет ставится из публичного npm, лицензия MIT, исходники —
+[tldrpg/lss-vtt-sdk](https://github.com/tldrpg/lss-vtt-sdk).
+
+## Минимальный пример
+
+```ts
+import {
+    createBridgeSheetSource,
+    SHEET_IFRAME_SANDBOX,
+    formatRollMessage,
+    rollVariant,
+} from '@longstoryshort/vtt-sdk';
+
+const iframe = document.createElement('iframe');
+iframe.src = 'https://longstoryshort.app/iframe/characters/list/';
+iframe.setAttribute('sandbox', SHEET_IFRAME_SANDBOX);
+iframe.setAttribute('allow', 'clipboard-write');
+iframe.style.cssText = 'border:none;width:100%;height:100vh;display:block';
+document.body.appendChild(iframe);
+
+const source = createBridgeSheetSource({
+    iframe,
+    allowedOrigins: ['https://longstoryshort.app'],
+});
+
+source.onRoll((roll) => {
+    // formatRollMessage → "🎲 Alice: Longsword Attack — 18 💥"
+    // rollVariant       → 'info' | 'success' | 'warning'
+    myVTT.notification.show(formatRollMessage(roll), rollVariant(roll));
+});
+```
+
+`createBridgeSheetSource` вешает слушатель `message` на `window` и пропускает только
+те сообщения, которые пришли с разрешённого origin, несут текущую версию протокола и
+отправлены именно из `iframe.contentWindow`. Всё остальное молча игнорируется.
+
+Когда встраивание больше не нужно — `source.dispose()` снимает слушатель.
+
+## Требования к sandbox
+
+`SHEET_IFRAME_SANDBOX` разворачивается в набор токенов, без которых лист не заработает:
+
+```
+allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals
+```
+
+| Токен | Зачем |
+|---|---|
+| `allow-same-origin` | Лист читает куку авторизации и `localStorage` **своего** origin |
+| `allow-scripts` | Лист — это JS-приложение |
+| `allow-popups` | Окна OAuth-редиректа |
+| `allow-popups-to-escape-sandbox` | Окно авторизации должно открыться в обычном контексте, а не унаследовать sandbox |
+| `allow-forms` | Отправка форм внутри листа |
+| `allow-modals` | Нативные диалоговые окна |
+
+`clipboard-write` — это токен Permissions Policy, он задаётся атрибутом `allow`, а не `sandbox`.
+
+:::note[Про `allow-same-origin`]
+Токен выглядит пугающе, но опасен он только когда iframe и внешняя страница находятся
+на **одном** origin — тогда он позволил бы iframe выйти из песочницы и добраться до кук
+родителя. Здесь это не наш случай: лист живёт на `longstoryshort.app`, ваша страница — на
+вашем домене, и границу браузер держит независимо от sandbox. То есть токен даёт листу
+доступ только к его собственным данным авторизации — ровно то, что ему нужно.
+:::
+
+## Адрес iframe
+
+Точка входа — список персонажей, дальше пользователь выбирает лист сам:
+
+```
+https://longstoryshort.app/iframe/characters/list/
+```
+
+Существуют и прямые адреса конкретного листа и конструктора
+(`/iframe/characters/digital/<id>/`, `/iframe/characters/builder/<id>/`), но
+документированной точкой входа в SDK остаётся список — начинайте с него.
+
+## События
+
+| Событие | Статус | Направление | Что это |
+|---|---|---|---|
+| `dnd:roll` | ✅ стабильное | лист → хост | Результат броска |
+| `dnd:manifest` | 🧪 зарезервировано | лист → хост | Возможности листа при рукопожатии |
+| `dnd:command` | 🧪 зарезервировано | хост → лист | Входящие команды (изменить HP, состояние…) |
+| `dnd:health` | 🧪 зарезервировано | лист → хост | HP после изменения |
+
+`onRoll` — сокращение для самого частого случая, `onEvent` отдаёт всё, включая
+экспериментальные события. Зарезервированные события типизированы и проведены сквозь
+лист, но их API на стороне хоста может измениться до стабилизации.
+
+:::caution
+Эта страница — обзорная. Точный и актуальный справочник по API, типам и утилитам живёт
+рядом с кодом: [SDK guide](https://github.com/tldrpg/lss-vtt-sdk/blob/master/docs/sdk-guide.md).
+Если что-то здесь разошлось с репозиторием — верен репозиторий.
+:::
+
+## Дальше
+
+Если ваш стол — обычное веб- или десктоп-приложение, где вы полностью управляете кодом,
+этого достаточно: ставьте SDK как npm-пакет и используйте прямо в своём коде.
+
+Если стол загружает интеграции как расширения, которые умеют только открыть URL (так
+устроен Owlbear Rodeo), понадобится отдельная статическая страница-мост —
+[читайте про мосты](/doc/developers/bridge/).
