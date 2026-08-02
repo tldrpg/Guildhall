@@ -2,7 +2,8 @@ import { defineCollection } from 'astro:content';
 // Re-exporting `z` from `astro:content` is deprecated in Astro 7.
 import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
-import { docsSchema } from '@astrojs/starlight/schema';
+import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
+import { i18nLoader } from '@astrojs/starlight/loaders';
 
 // Docs stay in `docs/` at the repo root so the markdown keeps rendering on
 // GitHub. Starlight's own `docsLoader()` is hardcoded to `src/content/docs`,
@@ -20,4 +21,7 @@ export const collections = {
             }),
         }),
     }),
+    // Lets src/content/i18n/ru.json override individual built-in UI strings
+    // (e.g. the "edit this page" label) without translating the whole locale.
+    i18n: defineCollection({ loader: i18nLoader(), schema: i18nSchema() }),
 };

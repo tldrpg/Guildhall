@@ -1,0 +1,10 @@
+---
+// Splash-template pages build their own hero (see LandingHero), so the generic
+// <h1> would just repeat the title a second time. Every other template keeps
+// Starlight's default heading.
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+
+const isSplash = Astro.locals.starlightRoute.entry.data.template === 'splash';
+---
+
+{!isSplash && <Default />}

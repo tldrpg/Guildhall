@@ -26,7 +26,7 @@
         <div class="actions">
             <button class="action primary" type="button" data-search-trigger hidden>
                 Искать по документации
-                <kbd>Ctrl</kbd><kbd>K</kbd>
+                <kbd>Ctrl</kbd>+<kbd>K</kbd>
             </button>
             <a class="action" href="#часто-задаваемые-вопросы">Частые вопросы</a>
         </div>
@@ -187,8 +187,10 @@
         border-radius: 0.6rem;
         background: transparent;
         color: var(--lss-paper);
+        font-family: inherit;
         font-size: var(--sl-text-base);
         font-weight: 600;
+        white-space: nowrap;
         text-decoration: none;
         cursor: pointer;
     }
@@ -216,6 +218,7 @@
         background: rgba(7, 3, 26, 0.25);
         font-family: var(--lss-mono);
         font-size: var(--sl-text-xs);
+        margin-top: 0 !important;
     }
 
     @media (prefers-reduced-motion: reduce) {

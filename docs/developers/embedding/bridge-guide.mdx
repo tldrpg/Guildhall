@@ -1,0 +1,186 @@
+---
+title: 'Справочник моста'
+description: 'Полный разбор моста для столов с расширениями: шаблон, справочник OwlbearAdapter, деплой.'
+---
+
+Некоторые столы (главный пример — Owlbear Rodeo) загружают интеграции как браузерные
+расширения, которые умеют только открыть страницу по URL — запустить произвольный
+npm-код внутри них нельзя. Для таких столов нужна **страница-мост**: статическая
+HTML/JS-страница, которую вы разворачиваете сами; расширение открывает её, а она уже
+встраивает лист.
+
+```
+Среда расширений стола
+  └── страница-мост  (ваша статика, ваш хостинг)
+        └── iframe с листом (longstoryshort.app)
+              └── postMessage ──→ мост ──→ вызовы API стола
+```
+
+Если ваш стол — веб-приложение, десктопное приложение или что угодно ещё, где вы
+полностью управляете кодом, мост **не нужен** — ставьте SDK npm-пакетом и работайте с
+ним прямо в своём коде. См. [SDK guide](/doc/developers/embedding/sdk-guide/).
+
+## Настройка страницы-моста
+
+Шаблон в [`bridges/_template/`](https://github.com/tldrpg/lss-vtt-sdk/tree/master/bridges/_template) —
+минимальная отправная точка на Vite:
+
+```sh
+cd bridges/_template
+npm install
+npm run dev     # локальный сервер разработки
+npm run build   # продакшен-сборка → dist/
+```
+
+`index.html` — пустая страница, загружающая `src/main.ts`. Вся логика — в `main.ts`.
+
+## Шаблон подключения
+
+`bridges/_template/src/main.ts` показывает минимальный паттерн — без интерфейса
+адаптера, без слоя абстракции:
+
+```ts
+import { createBridgeSheetSource, SHEET_IFRAME_SANDBOX, formatRollMessage, rollVariant } from '@longstoryshort/vtt-sdk';
+
+// 1. Встроить лист
+const iframe = document.createElement('iframe');
+iframe.src = 'https://longstoryshort.app/iframe/characters/list/';
+iframe.setAttribute('sandbox', SHEET_IFRAME_SANDBOX);
+iframe.setAttribute('allow', 'clipboard-write');
+iframe.style.cssText = 'border:none;width:100%;height:100vh;display:block';
+document.body.appendChild(iframe);
+
+// 2. Подключить броски к API вашего стола
+const source = createBridgeSheetSource({
+    iframe,
+    allowedOrigins: ['https://longstoryshort.app'],
+});
+
+source.onRoll((roll) => {
+    const message = formatRollMessage(roll); // "🎲 Alice: Longsword Attack — 18"
+    const variant = rollVariant(roll);       // 'info' | 'success' | 'warning'
+
+    myVTT.notification.show(message, variant);
+    myVTT.room.broadcast(JSON.stringify({ type: 'dnd:roll', payload: roll }));
+});
+
+// 3. Принять рассылку от других игроков и показать её локально
+myVTT.room.onBroadcast((raw) => {
+    const event = JSON.parse(raw);
+    if (event.type === 'dnd:roll') {
+        myVTT.notification.show(
+            formatRollMessage(event.payload),
+            rollVariant(event.payload),
+        );
+    }
+});
+```
+
+Замените `myVTT.*` на API вашего стола. Никакого интерфейса адаптера реализовывать не
+нужно — SDK доставляет типизированные события, а что с ними делать — дело вашего моста.
+
+## Референсный мост для Owlbear Rodeo
+
+`bridges/dnd/src/main.ts` — полный задеплоенный OBR-мост. Он следует тому же паттерну,
+но использует `OwlbearAdapter` — вспомогательный класс, оборачивающий API комнаты,
+уведомлений и сцены OBR.
+
+```ts
+import * as obrSdk from '@owlbear-rodeo/sdk';
+import { syncObrref, OwlbearAdapter, preloadObrSdk } from '@longstoryshort/vtt-sdk/owlbear';
+import { createBridgeSheetSource, SHEET_IFRAME_SANDBOX, formatRollMessage, rollVariant } from '@longstoryshort/vtt-sdk';
+
+// Расширения OBR загружаются во фрейме, чей родитель уже держит OBR SDK.
+// syncObrref() читает куку obrref, которую OBR подставляет в URL фрейма.
+// preloadObrSdk() кеширует уже импортированный модуль, чтобы поздний
+// динамический импорт не пропустил одноразовое рукопожатие OBR_READY.
+syncObrref();
+preloadObrSdk(obrSdk);
+
+const iframe = document.createElement('iframe');
+iframe.src = 'https://longstoryshort.app/iframe/characters/list/';
+iframe.setAttribute('sandbox', SHEET_IFRAME_SANDBOX);
+iframe.setAttribute('allow', 'clipboard-write');
+iframe.style.cssText = 'border:none;width:100%;height:100vh;display:block';
+document.body.appendChild(iframe);
+
+const source = createBridgeSheetSource({ iframe, allowedOrigins: ['https://longstoryshort.app'] });
+const adapter = new OwlbearAdapter();
+
+// Подписки включаются только после готовности OBR — броски, пришедшие
+// раньше инициализации, теряются.
+void adapter.ready().then((ok) => {
+    if (!ok) return;
+    adapter.notify('🎲 Лист подключён к столу', 'success');
+
+    source.onRoll((roll) => {
+        // Локальный тост для того, кто бросил (рассылка OBR — только для остальных).
+        adapter.notify(formatRollMessage(roll), rollVariant(roll));
+        // Разослать всем остальным клиентам в комнате.
+        adapter.broadcast({ type: 'dnd:roll', payload: roll });
+        // Попробовать разместить плавающую подпись над выбранным токеном.
+        void adapter.labelOverSelection(roll.total).then((placed) => {
+            if (!placed) {
+                adapter.notify('Подпись не размещена — выберите ровно один свой токен на карте', 'warning');
+            }
+        });
+    });
+
+    // Показать броски, разосланные другими игроками.
+    source.onEvent((event) => {
+        if (event.type === 'dnd:roll') {
+            adapter.notify(formatRollMessage(event.payload), rollVariant(event.payload));
+        }
+    });
+});
+```
+
+## Справочник `OwlbearAdapter`
+
+`OwlbearAdapter` экспортируется из `@longstoryshort/vtt-sdk/owlbear`. Реализует
+интерфейс `ObrAdapter` (экспортируется из той же точки входа).
+
+| Метод | Описание |
+|---|---|
+| `ready()` | Ожидает событие `onReady` OBR. Резолвится в `false`, если страница открыта не внутри расширения OBR. Безопасно вызывать многократно. |
+| `isAvailable` | `true` после успешного резолва `ready()`. |
+| `notify(message, variant?)` | Показывает тост-уведомление OBR. `variant` — `'info' \| 'success' \| 'warning' \| 'error'`. |
+| `broadcast(event)` | Отправляет через `OBR.broadcast` всем остальным клиентам в комнате (отправитель исключён). |
+| `onEvent(handler)` | Подписка на рассылки от других клиентов. Возвращает функцию отписки. |
+| `labelOverSelection(text, ttlMs?)` | Добавляет временную текстовую подпись над выбранным токеном на сцене OBR. Общая — видна всем игрокам. Резолвится в `false`, если токен не выбран, сцена недоступна или запись отклонена. |
+| `getSessionId()` | Возвращает ID комнаты OBR, доступен после `ready()`. |
+| `getCurrentUser()` | Возвращает `{ id, name, role }` текущего игрока OBR, доступен после `ready()`. |
+| `dispose()` | Помечает адаптер как уничтоженный. |
+
+### Вспомогательные функции запуска OBR
+
+Также экспортируются из `@longstoryshort/vtt-sdk/owlbear`:
+
+| Экспорт | Описание |
+|---|---|
+| `preloadObrSdk(sdk)` | Кеширует статически импортированный модуль OBR, чтобы поздний динамический импорт не пропустил одноразовое событие `OBR_READY`. Вызывайте до любого `await`. |
+| `syncObrref()` | Восстанавливает куку `obrref`, которую OBR подставляет в URL фрейма расширения. Нужна после клиентской навигации, сбрасывающей состояние URL. |
+| `whenObrReady(obr)` | Промисифицирует `OBR.onReady()`. Используется внутри `OwlbearAdapter`. |
+
+## Деплой
+
+Страница-мост — это статический сайт. Собирается через Vite:
+
+```sh
+vite build   # → dist/
+```
+
+Задайте `base` в `vite.config.ts` в соответствии с путём деплоя:
+
+```ts
+export default defineConfig({
+    base: '/my-vtt/',
+    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+});
+```
+
+Разверните `dist/` на любом статическом хостинге — GitHub Pages, Cloudflare Pages, Netlify.
+
+Для расширений OBR укажите в `action.url` манифеста адрес развёрнутого `index.html`.
+Форму манифеста OBR см. в
+[`bridges/dnd/public/manifest.json`](https://github.com/tldrpg/lss-vtt-sdk/blob/master/bridges/dnd/public/manifest.json).

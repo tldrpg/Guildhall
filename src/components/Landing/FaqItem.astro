@@ -20,7 +20,16 @@ const { question } = Astro.props as FaqItemProps;
 
 <style>
     .faq {
-        border-bottom: 1px solid var(--sl-color-gray-5);
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 1rem;
+        padding: 0 1.25rem;
+        background: var(--sl-color-gray-6);
+        transition: border-color 0.15s ease;
+        margin-top: 0 !important;
+    }
+
+    .faq[open] {
+        border-color: var(--sl-color-gray-4);
     }
 
     summary {
@@ -28,7 +37,7 @@ const { question } = Astro.props as FaqItemProps;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        padding: 1rem 0;
+        padding: 1.1rem 0;
         font-size: var(--sl-text-base);
         font-weight: 600;
         color: var(--sl-color-white);

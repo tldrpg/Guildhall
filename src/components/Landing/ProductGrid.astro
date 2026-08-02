@@ -7,8 +7,8 @@ import VortexGlyph from './glyphs/VortexGlyph.astro';
 
 <div class="grid">
     <ProductCard
-        title="Лист персонажа"
-        href="/doc/character-sheet/web-app/"
+        title="Лист персонажа D&D"
+        href="/doc/character-sheet/"
         tagline="Заполняемый лист для D&D 5e и Приключений в Средиземье: бонусы, формулы, заклинания, печать в PDF."
         accent="blue"
         links={[
@@ -37,7 +37,7 @@ import VortexGlyph from './glyphs/VortexGlyph.astro';
     <ProductCard
         title="Vortex"
         href="/doc/vortex/about/"
-        tagline="Комнаты для персонажей: общий стол и броски, улетающие в Telegram и Discord."
+        tagline="Комнаты для персонажей: общий лог, характеристики в реальном времени и броски, улетающие в Telegram и Discord."
         accent="green"
         links={[
             { text: 'Общее описание', href: '/doc/vortex/about/' },
@@ -50,9 +50,14 @@ import VortexGlyph from './glyphs/VortexGlyph.astro';
 
 <style>
     .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
         gap: 1.25rem;
         margin-bottom: 3.5rem;
+    }
+
+    .grid > :global(.card) {
+        flex: 1 1 16rem;
     }
 </style>

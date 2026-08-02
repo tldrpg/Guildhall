@@ -32,16 +32,27 @@
     --lss-paper: #f7f9ff;
     --lss-display: 'PT Serif', Georgia, 'Times New Roman', serif;
     --lss-mono: 'PT Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* "Устарело" sidebar badge (caution variant): softer on-brand lilac instead of
+       the stock orange, since it's used for deprecation, not a warning. */
+    --sl-badge-caution-border: #7c4fd6;
+    --sl-badge-caution-bg: rgba(142, 84, 233, 0.14);
+    --sl-badge-caution-text: #d9c9fb;
 }
 
 :root[data-theme='light'] {
     --sl-color-accent-low: #e5ddfa;
     --sl-color-accent: #6f45d9;
     --sl-color-accent-high: #2c1a5e;
+
+    --sl-badge-caution-border: #8b5cf6;
+    --sl-badge-caution-bg: rgba(142, 84, 233, 0.1);
+    --sl-badge-caution-text: #5b21b6;
 }
 
 /* The site title sits next to the logo mark, so keep it visually quiet. */
 .site-title {
+    font-family: var(--lss-display);
     font-weight: 600;
 }
 

@@ -3,9 +3,32 @@ title: 'Vortex — комнаты для персонажей'
 description: 'Vortex — это отдельное приложение, которое служит центром управления игровой сессией. Оно объединяет персонажей в одной «комнате» и ведёт общий лог бросков.'
 ---
 
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
 [Vortex](https://vortex.longstoryshort.app/) — это отдельное приложение, которое служит центром управления игровой сессией. Оно объединяет персонажей в одной «комнате» и ведёт общий лог бросков.
 
 ![Комната Vortex LSS](./assets/1.jpg)
+
+## С чего начать
+
+<CardGrid>
+    <Card title="Добавьте персонажей" icon="rocket">
+        Создайте комнату и подключите к ней персонажей по коду.
+        [Добавление персонажей](/doc/vortex/adding-characters/)
+    </Card>
+    <Card title="Telegram" icon="telegram">
+        Настройте отправку бросков в чат группы.
+        [Отправлять броски в Telegram](/doc/vortex/telegram/)
+    </Card>
+    <Card title="Discord" icon="discord">
+        Настройте отправку бросков на сервер группы.
+        [Отправлять броски в Discord](/doc/vortex/discord/)
+    </Card>
+    <Card title="Owlbear Rodeo" icon="puzzle">
+        Открывайте комнату Vortex прямо внутри виртуального стола.
+        [Интеграция с Owlbear Rodeo](/doc/integration/owlbear/)
+    </Card>
+</CardGrid>
 
 ## Что умеет Vortex
 
@@ -31,10 +54,6 @@ description: 'Vortex — это отдельное приложение, кот�
 Vortex находится по адресу [vortex.longstoryshort.app](https://vortex.longstoryshort.app).
 
 Сейчас в Vortex можно подключать персонажей из интерактивного листа [Long Story Short](https://longstoryshort.app/characters/list/). Позже появится поддержка листов персонажей [Anima](https://anima.longstoryshort.app/).
-
-## Что дальше
-
-Чтобы создать комнату и добавить в неё персонажей, обратитесь к [инструкции](/doc/vortex/adding-characters/).
 
 ## Интеграция с Owlbear Rodeo
 

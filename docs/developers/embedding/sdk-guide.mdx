@@ -1,0 +1,201 @@
+---
+title: 'Справочник SDK'
+description: 'Полный справочник по @longstoryshort/vtt-sdk: sandbox, приём и отправка событий, протокол, утилиты.'
+---
+
+Эта страница — подробный справочник по `@longstoryshort/vtt-sdk`: транспортному слою и
+типам протокола. Она применима к любой архитектуре стола — веб-приложению, десктопному
+приложению, расширению браузера. Обзорное введение — на [странице встраивания](/doc/developers/embedding/); если стол загружает интеграции как расширения по URL, читайте
+ещё [Bridge guide](/doc/developers/embedding/bridge-guide/) про статическую страницу-мост.
+
+## Как это устроено
+
+Лист и ваш стол работают на **разных origin**. Общение идёт только через
+`window.postMessage` — ваш код никогда не читает DOM листа, его куки или токен
+авторизации.
+
+```
+Ваша страница (ваш origin)
+  └── iframe с листом (longstoryshort.app)
+        └── postMessage ──→ ваша страница
+```
+
+SDK берёт на себя формат конверта, согласование версии протокола и фильтрацию по origin.
+Наружу отдаются типизированные события.
+
+## Установка
+
+```sh
+npm install @longstoryshort/vtt-sdk
+```
+
+## Встраивание листа
+
+```ts
+import { SHEET_IFRAME_SANDBOX } from '@longstoryshort/vtt-sdk';
+
+const iframe = document.createElement('iframe');
+iframe.src = 'https://longstoryshort.app/iframe/characters/list/';
+iframe.title = 'LSS Character Sheet';
+iframe.setAttribute('sandbox', SHEET_IFRAME_SANDBOX);
+iframe.setAttribute('allow', 'clipboard-write');
+iframe.style.cssText = 'border:none;width:100%;height:100vh;display:block';
+document.body.appendChild(iframe);
+```
+
+`SHEET_IFRAME_SANDBOX` разворачивается в:
+
+```
+allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals
+```
+
+### Флаги sandbox
+
+| Флаг | Зачем нужен |
+|---|---|
+| `allow-same-origin` | Лист читает куку авторизации и `localStorage` **своего** origin. Без флага origin становится непрозрачным и логин ломается. |
+| `allow-scripts` | Лист — это JS-приложение. |
+| `allow-popups` | Окна OAuth-редиректа. |
+| `allow-popups-to-escape-sandbox` | Окно авторизации должно открыться в обычном контексте, а не унаследовать sandbox. |
+| `allow-forms` | Отправка форм внутри листа. |
+| `allow-modals` | Нативные диалоговые окна. |
+
+`clipboard-write` — это флаг Permissions Policy, он задаётся атрибутом `allow`, а не `sandbox`.
+
+### Про `allow-same-origin`
+
+На первый взгляд флаг настораживает. Опасность реальна только тогда, когда iframe и
+внешняя страница находятся на **одном** origin — тогда `allow-same-origin` позволил бы
+iframe выйти из песочницы и добраться до кук родителя. Здесь это не так: лист живёт на
+`longstoryshort.app`, ваша страница — на вашем собственном origin. Границу браузер
+держит независимо от sandbox, так что флаг даёт листу доступ только к его собственным
+данным авторизации — ровно то, что ему нужно.
+
+## Приём событий
+
+```ts
+import { createBridgeSheetSource } from '@longstoryshort/vtt-sdk';
+
+const source = createBridgeSheetSource({
+    iframe,
+    // Учитываются только сообщения с origin листа.
+    allowedOrigins: ['https://longstoryshort.app'],
+});
+```
+
+`createBridgeSheetSource` вешает слушатель `message` на `window` и пропускает только
+конверты, которые пришли с разрешённого origin, несут текущую версию протокола и
+отправлены именно из `iframe.contentWindow`. Всё остальное молча игнорируется.
+
+### Броски костей
+
+```ts
+import { formatRollMessage, rollVariant } from '@longstoryshort/vtt-sdk';
+
+source.onRoll((roll) => {
+    const message = formatRollMessage(roll); // "🎲 Alice: Longsword Attack — 18 💥"
+    const severity = rollVariant(roll);      // 'info' | 'success' | 'warning'
+
+    // Дальше — как удобно вашему столу: уведомление, чат, рассылка и т. д.
+    myVTT.notification.show(message, severity);
+});
+```
+
+### Все события
+
+```ts
+source.onEvent((event) => {
+    if (event.type === 'dnd:roll') {
+        // event.payload: DiceRollPayload
+    }
+    if (event.type === 'dnd:manifest') {
+        // event.payload: CapabilityManifest  (экспериментально)
+    }
+    if (event.type === 'dnd:health') {
+        // event.payload: HealthChangedPayload  (экспериментально)
+    }
+});
+```
+
+`onRoll` — сокращение для самого частого случая, `onEvent` отдаёт всё, включая
+экспериментальные события.
+
+### Очистка
+
+```ts
+source.dispose(); // снимает слушатель message
+```
+
+## Отправка команд в лист
+
+```ts
+// Исходящая команда (экспериментально)
+source.send({
+    type: 'dnd:command',
+    payload: { op: 'adjust', capabilityId: 'hp', delta: -5 },
+});
+```
+
+## Справочник протокола
+
+| Тип события | Статус | Направление | Тип payload |
+|---|---|---|---|
+| `dnd:roll` | ✅ стабильное | лист → хост | `DiceRollPayload` |
+| `dnd:manifest` | 🧪 зарезервировано | лист → хост | `CapabilityManifest` |
+| `dnd:health` | 🧪 зарезервировано | лист → хост | `HealthChangedPayload` |
+| `dnd:command` | 🧪 зарезервировано | хост → лист | `CapabilityOperation` |
+
+Зарезервированные события типизированы и проведены сквозь лист, но API на стороне
+моста считается экспериментальным и может измениться до стабилизации.
+
+## Утилиты
+
+### `formatRollMessage(roll: DiceRollPayload): string`
+
+Человекочитаемая строка броска для уведомлений или чата:
+
+| Результат броска | Вывод |
+|---|---|
+| Обычный | `🎲 Alice: Longsword Attack — 18` |
+| Крит успеха | `🎲 Alice: Longsword Attack — 20 💥` |
+| Крит провала | `🎲 Alice: Longsword Attack — 1 💀` |
+
+### `rollVariant(roll: DiceRollPayload): NotifyVariant`
+
+Отображает состояние крита в серьёзность уведомления, чтобы красить тосты по цвету:
+
+| Условие | Возвращает |
+|---|---|
+| Крит успеха | `'success'` |
+| Крит провала | `'warning'` |
+| Обычный бросок | `'info'` |
+
+`NotifyVariant` — это `'info' \| 'success' \| 'warning' \| 'error'`.
+
+## Сторона листа
+
+Если вы разрабатываете **сам лист** (а не встраивающий его стол), используйте
+`createSheetClient` для отправки событий и приёма входящих команд:
+
+```ts
+import { createSheetClient } from '@longstoryshort/vtt-sdk';
+
+const client = createSheetClient();
+
+// Отправить бросок во встраивающую страницу
+client.send({ type: 'dnd:roll', payload: { ... } });
+
+// Принять входящие команды от моста
+const unsub = client.onEvent((event) => {
+    if (event.type === 'dnd:command') {
+        // применить операцию к персонажу
+    }
+});
+
+// Очистка
+unsub();
+client.dispose();
+```
+
+`createSheetClient` по умолчанию отправляет в `window.parent` (встраивающий мост) и
+слушает `window`.

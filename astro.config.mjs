@@ -54,22 +54,25 @@ export default defineConfig({
                 // slot for the topic switcher, and a config-level override wins over the
                 // plugin's, silently removing it.
                 Head: './src/components/Head.astro',
+                // Logo mark links to the app itself, the "База знаний" text links to the
+                // docs home — two destinations, so the default single <a> won't do.
+                SiteTitle: './src/components/SiteTitle.astro',
+                // Splash-template pages (the landing page) build their own hero and
+                // shouldn't also get the generic page <h1>.
+                PageTitle: './src/components/PageTitle.astro',
+                // Restyled to match the ProductCard system instead of Starlight's default.
+                Pagination: './src/components/Pagination.astro',
             },
             plugins: [
                 starlightSidebarTopics([
                     {
-                        label: 'Long Story Short',
-                        link: '/',
+                        label: 'Лист персонажа D&D',
+                        link: '/character-sheet/',
                         icon: 'open-book',
                         id: 'lss',
                         items: [
-                            {
-                                label: 'База знаний Long Story Short',
-                                items: [
-                                    { label: 'Введение', link: '/' },
-                                    { slug: 'main/limits', label: 'Лимиты' },
-                                ],
-                            },
+                            { slug: 'character-sheet', label: 'Обзор' },
+                            { slug: 'main/limits', label: 'Лимиты' },
                             {
                                 label: 'Основные возможности',
                                 items: [
@@ -175,7 +178,7 @@ export default defineConfig({
                         icon: 'comment',
                         id: 'vortex',
                         items: [
-                            { slug: 'vortex/about', label: 'Общее описание' },
+                            { slug: 'vortex/about', label: 'Обзор' },
                             { slug: 'vortex/adding-characters', label: 'Добавление персонажей' },
                             { slug: 'vortex/telegram', label: 'Отправлять броски в Telegram' },
                             { slug: 'vortex/discord', label: 'Отправлять броски в Discord' },
@@ -187,8 +190,19 @@ export default defineConfig({
                         icon: 'puzzle',
                         id: 'developers',
                         items: [
-                            { slug: 'developers', label: 'Встраивание листа' },
-                            { slug: 'developers/bridge', label: 'Мосты для VTT' },
+                            { slug: 'developers', label: 'Обзор' },
+                            {
+                                label: 'Встраивание листа',
+                                items: [
+                                    { slug: 'developers/embedding', label: 'Как встроить лист' },
+                                    { slug: 'developers/embedding/sdk-guide', label: 'Справочник SDK' },
+                                    { slug: 'developers/embedding/bridge', label: 'Мосты для VTT' },
+                                    { slug: 'developers/embedding/bridge-guide', label: 'Справочник моста' },
+                                ],
+                            },
+                            { slug: 'developers/datasets', label: 'Датасеты' },
+                            { slug: 'developers/characters', label: 'Формат персонажа' },
+                            { slug: 'developers/contribute', label: 'Как помочь проекту' },
                         ],
                     },
                 ]),

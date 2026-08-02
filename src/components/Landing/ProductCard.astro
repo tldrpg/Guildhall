@@ -38,30 +38,29 @@ const { title, href, tagline, accent, links } = Astro.props as ProductCardProps;
 
 <style>
     .card {
+        /* Without this, three flex items with equal align-items: stretch still end up at
+           mismatched heights whenever their natural content heights differ — a nested
+           flex-in-flex quirk in Chromium. An explicit height gives the stretched cross
+           size somewhere definite to resolve against, so all cards end up the same height. */
+        height: 100%;
         position: relative;
         display: flex;
         flex-direction: column;
         padding: 1.5rem;
+        padding-top: calc(1.5rem - 3px);
         border: 1px solid var(--sl-color-gray-5);
+        border-top: 3px solid var(--card-accent);
         border-radius: 1rem;
         /* gray-6 is Starlight's raised surface: it flips correctly between themes. */
         background: var(--sl-color-gray-6);
         transition: border-color 0.15s ease, transform 0.15s ease;
+
+        margin-top: 0 !important;
     }
 
     .card:hover {
         border-color: var(--card-accent);
         transform: translateY(-2px);
-    }
-
-    /* A coloured hairline at the top ties the card to its product. */
-    .card::before {
-        content: '';
-        position: absolute;
-        inset: -1px -1px auto -1px;
-        height: 3px;
-        border-radius: 1rem 1rem 0 0;
-        background: var(--card-accent);
     }
 
     .blue {
@@ -131,6 +130,10 @@ const { title, href, tagline, accent, links } = Astro.props as ProductCardProps;
         color: var(--sl-color-gray-2);
         text-decoration: none;
         border-bottom: 1px solid var(--sl-color-gray-5);
+    }
+    
+    .links li {
+        margin-top: 0 !important;
     }
 
     .links a:hover {

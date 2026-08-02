@@ -1,0 +1,151 @@
+---
+title: 'Встраивание листа персонажа'
+description: 'Как встроить лист персонажа Long Story Short в свой виртуальный стол через iframe и postMessage.'
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+Лист персонажа Long Story Short можно встроить в стороннее приложение — виртуальный стол,
+менеджер кампании и так далее — и затем общаться с ним через механизм postMessage. Через этот механизм уже работают наши собственные расширения для [Owlbear Rodeo](/doc/integration/owlbear/): это открытый протокол, доступный любому разработчику.
+
+## С чего начать
+
+Встроенное приложение открывается только с доменов из белого списка — добавить туда
+`localhost` нельзя, нужен именно ваш рабочий домен. Пришлите его
+[@shakusky](https://t.me/shakusky) в Telegram, `shakusky.lss` в Discord или напишите в
+сообщения сообщества [VK](https://vk.ru/longstoryshortapp) — и мы добавим домен в список.
+
+<CardGrid>
+    <Card title="Свой код" icon="npm">
+        Поставьте SDK из npm и используйте его прямо в своём приложении.
+        [Минимальный пример](#минимальный-пример)
+    </Card>
+    <Card title="Расширение VTT" icon="puzzle">
+        Стол умеет только открыть URL? Понадобится статическая страница-мост.
+        [Мосты для VTT](/doc/developers/embedding/bridge/)
+    </Card>
+</CardGrid>
+
+## Как это устроено
+
+Лист остаётся на `longstoryshort.app` и открывается у вас в `iframe`. Общение идёт через `window.postMessage`, и вашему коду нет необходимости читать DOM листа, управлять его куками и токенами авторизации.
+
+```
+Ваша страница (ваш origin)
+  └── iframe с листом (longstoryshort.app)
+        └── postMessage ──→ ваша страница
+```
+
+## Что понадобится
+
+SDK берёт на себя формат конверта, согласование версии протокола и фильтрацию по origin,
+отдавая наружу типизированные события:
+
+```sh
+npm install @longstoryshort/vtt-sdk
+```
+
+Пакет ставится из публичного npm (лицензия MIT), исходники —
+[tldrpg/lss-vtt-sdk](https://github.com/tldrpg/lss-vtt-sdk).
+
+## Минимальный пример
+
+```ts
+import {
+    createBridgeSheetSource,
+    SHEET_IFRAME_SANDBOX,
+    formatRollMessage,
+    rollVariant,
+} from '@longstoryshort/vtt-sdk';
+
+const iframe = document.createElement('iframe');
+iframe.src = 'https://longstoryshort.app/iframe/characters/list/';
+iframe.setAttribute('sandbox', SHEET_IFRAME_SANDBOX);
+iframe.setAttribute('allow', 'clipboard-write');
+iframe.style.cssText = 'border:none;width:100%;height:100vh;display:block';
+document.body.appendChild(iframe);
+
+const source = createBridgeSheetSource({
+    iframe,
+    allowedOrigins: ['https://longstoryshort.app'],
+});
+
+source.onRoll((roll) => {
+    // formatRollMessage → "🎲 Alice: Longsword Attack — 18 💥"
+    // rollVariant       → 'info' | 'success' | 'warning'
+    myVTT.notification.show(formatRollMessage(roll), rollVariant(roll));
+});
+```
+
+`createBridgeSheetSource` вешает слушатель `message` на `window` и пропускает только
+те сообщения, которые пришли с разрешённого origin, несут текущую версию протокола и
+отправлены именно из `iframe.contentWindow`. Всё остальное молча игнорируется.
+
+Когда встраивание больше не нужно — `source.dispose()` снимает слушатель.
+
+## Требования к sandbox
+
+`SHEET_IFRAME_SANDBOX` разворачивается в набор флагов, без которых лист не заработает:
+
+```
+allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals
+```
+
+| Флаг | Назначение |
+|---|---|
+| `allow-same-origin` | Лист читает куку авторизации и `localStorage` **своего** origin |
+| `allow-scripts` | Лист — это JS-приложение |
+| `allow-popups` | Окна OAuth-редиректа |
+| `allow-popups-to-escape-sandbox` | Окно авторизации должно открыться в обычном контексте, а не унаследовать sandbox |
+| `allow-forms` | Отправка форм внутри листа |
+| `allow-modals` | Нативные диалоговые окна |
+
+`clipboard-write` — это флаг Permissions Policy, он задаётся атрибутом `allow`, а не `sandbox`.
+
+:::note[Про `allow-same-origin`]
+В данном случае флаг безопасен, так как iframe и внешняя страница находятся
+на **разных** origin — iframe не может выйти из песочницы и добраться до кук
+родителя. То есть лист живёт на `longstoryshort.app`, ваша страница — на
+вашем домене, и границу браузер держит независимо от sandbox. Флаг даёт листу
+доступ только к его собственным данным авторизации — ровно то, что ему нужно.
+:::
+
+## Адрес iframe
+
+Точка входа — список персонажей, дальше пользователь выбирает лист сам:
+
+```
+https://longstoryshort.app/iframe/characters/list/
+```
+
+Существуют и прямые адреса конкретного листа и конструктора
+(`/iframe/characters/digital/<id>/`, `/iframe/characters/builder/<id>/`). Если ваше приложение само
+управляет выбранным персонажем, можно открывать iframe сразу на его странице по id. В противном случае стоит
+открывать `/characters/list/`, чтобы дать пользователю выбрать персонажа из списка.
+
+## События
+
+| Событие | Статус | Направление | Что это |
+|---|---|---|---|
+| `dnd:roll` | ✅ стабильное | лист → хост | Результат броска |
+| `dnd:manifest` | 🧪 зарезервировано | лист → хост | Возможности листа при рукопожатии |
+| `dnd:command` | 🧪 зарезервировано | хост → лист | Входящие команды (изменить HP, состояние…) |
+| `dnd:health` | 🧪 зарезервировано | лист → хост | HP после изменения |
+
+`onRoll` — сокращение для самого частого случая, `onEvent` отдаёт всё, включая
+экспериментальные события. Зарезервированные события типизированы и проведены сквозь
+лист, но их API на стороне хоста может измениться до стабилизации.
+
+:::note
+Эта страница — обзорная. Полный справочник по API, типам и утилитам — на отдельной
+странице: [SDK guide](/doc/developers/embedding/sdk-guide/).
+:::
+
+## Дальше
+
+Если ваш стол — обычное веб- или десктоп-приложение, где вы полностью управляете кодом,
+этого достаточно: ставьте SDK как npm-пакет и используйте прямо в своём коде.
+
+Если стол загружает интеграции как расширения, которые умеют только открыть URL (так
+устроен Owlbear Rodeo), понадобится отдельная статическая страница-мост —
+[читайте про мосты](/doc/developers/embedding/bridge/).
