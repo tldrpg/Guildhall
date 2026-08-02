@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import mdx from '@astrojs/mdx';
 import starlight from '@astrojs/starlight';
 import starlightSidebarTopics from 'starlight-sidebar-topics';
 
@@ -13,7 +12,6 @@ export default defineConfig({
     // Matches the trailing-slash redirect nginx already enforces for the whole host.
     trailingSlash: 'always',
     integrations: [
-        // Starlight registers astro-expressive-code, which must be set up before mdx().
         starlight({
             title: 'База знаний',
             description: 'Документация Long Story Short, Anima и Vortex — инструментов для настольных ролевых игр.',
@@ -38,6 +36,26 @@ export default defineConfig({
                     tag: 'link',
                     attrs: { rel: 'manifest', href: '/manifest.webmanifest' },
                 },
+                {
+                    tag: 'meta',
+                    attrs: { name: 'twitter:card', content: 'summary_large_image' },
+                },
+                {
+                    tag: 'meta',
+                    attrs: { property: 'og:image', content: 'https://longstoryshort.app/doc/cover.jpg' },
+                },
+                {
+                    tag: 'meta',
+                    attrs: { property: 'og:image:width', content: '1920' },
+                },
+                {
+                    tag: 'meta',
+                    attrs: { property: 'og:image:height', content: '960' },
+                },
+                {
+                    tag: 'meta',
+                    attrs: { name: 'twitter:image', content: 'https://longstoryshort.app/doc/cover.jpg' },
+                },
             ],
             social: [
                 { icon: 'telegram', label: 'Гильдия в Telegram', href: 'https://t.me/rpg_guild' },
@@ -47,6 +65,12 @@ export default defineConfig({
                 baseUrl: 'https://github.com/tldrpg/Guildhall/edit/master/',
             },
             lastUpdated: true,
+            markdown: {
+                // Docs live at the repo root `docs/`, not the default `src/content/docs/`.
+                // Starlight's built-in plugins (asides, heading links, etc.) must also
+                // process files there so that `:::` directives render correctly.
+                processedDirs: ['docs'],
+            },
             customCss: ['./src/styles/custom.css'],
             components: {
                 // Wraps the default head to append JSON-LD structured data.
@@ -81,7 +105,6 @@ export default defineConfig({
                                     { slug: 'character-sheet/multiclass', label: 'Мультикласс' },
                                     { slug: 'character-sheet/bonuses', label: 'Система бонусов' },
                                     { slug: 'character-sheet/expression-input', label: 'Поля с формулами' },
-                                    { slug: 'character-sheet/advantage-disadvantage', label: 'Преимущество/Помеха' },
                                     { slug: 'character-sheet/translations', label: 'Переводы' },
                                 ],
                             },
@@ -130,12 +153,14 @@ export default defineConfig({
                                     {
                                         slug: 'character-sheet/telegram',
                                         label: 'Пресеты Telegram',
-                                        badge: { text: 'Устарело', variant: 'caution' },
                                     },
                                     {
                                         slug: 'character-sheet/discord',
                                         label: 'Пресеты Discord',
-                                        badge: { text: 'Устарело', variant: 'caution' },
+                                    },
+                                    {
+                                        slug: 'character-sheet/advantage-disadvantage',
+                                        label: 'Преимущество/Помеха',
                                     },
                                 ],
                             },
@@ -208,6 +233,5 @@ export default defineConfig({
                 ]),
             ],
         }),
-        mdx(),
     ],
 });

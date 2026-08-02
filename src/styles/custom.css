@@ -50,6 +50,15 @@
     --sl-badge-caution-text: #5b21b6;
 }
 
+/* Starlight's <Card> rotates icon badges through purple/orange/green/red/blue by
+   nth-child position. Pin every card to the site's single accent color instead —
+   these rules are unlayered, so they win over Starlight's `@layer starlight.components`
+   regardless of source order or the nth-child specificity there. */
+.card {
+    --sl-card-border: var(--sl-color-accent);
+    --sl-card-bg: var(--sl-color-accent-low);
+}
+
 /* The site title sits next to the logo mark, so keep it visually quiet. */
 .site-title {
     font-family: var(--lss-display);
@@ -68,6 +77,31 @@
     white-space: normal;
 }
 
+/* Compact variant for dense reference tables with many short columns (e.g. the
+   limits comparison table): opt in by wrapping the table in
+   <div className="table-container">. Tighter padding and a smaller font let
+   more columns fit before the table has to scroll — other doc tables (fields,
+   variables) keep the spacious default above. */
+.table-container table {
+    font-size: 0.875rem;
+}
+
+.table-container :is(th, td) {
+    padding: 0.35rem 0.65rem;
+}
+
+.table-container :is(th:first-child, td:first-child) {
+    padding-inline-start: 0;
+}
+
+.table-container :is(th:last-child, td:last-child) {
+    padding-inline-end: 0;
+}
+
+.table-container :is(th, td):not(:first-child) {
+    text-align: center;
+}
+
 /* Inline code holds formula snippets like `[local-modifier]`; make it readable. */
 .sl-markdown-content :not(pre) > code {
     font-size: 0.9em;
@@ -76,4 +110,18 @@
 /* Screenshots are the bulk of the Long Story Short pages — keep them tidy. */
 .sl-markdown-content img {
     border-radius: 0.5rem;
+}
+
+/* :::caution blocks — on-brand lilac instead of the stock orange, matching the
+   "Устарело" sidebar badges. Unlayered, so they win over Starlight's own. */
+.starlight-aside--caution {
+    --sl-color-asides-text-accent: #d9c9fb;
+    --sl-color-asides-border: #8e54e9;
+    background-color: rgba(142, 84, 233, 0.12);
+}
+
+[data-theme='light'] .starlight-aside--caution {
+    --sl-color-asides-text-accent: #5b21b6;
+    --sl-color-asides-border: #8b5cf6;
+    background-color: rgba(142, 84, 233, 0.08);
 }
