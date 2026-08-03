@@ -94,20 +94,19 @@ sudo nginx -t && sudo systemctl reload nginx
 
 Модификатор `^~` в этом блоке обязателен — подробности в комментариях к конфигу.
 
-**4. Раннер GitHub Actions**
+**4. SSH-доступ для деплоя**
 
-Workflow использует `runs-on: self-hosted`, как и остальные проекты на этом сервере.
-Нужен раннер, зарегистрированный на репозиторий `tldrpg/Guildhall` (по образцу
-`~/actions-runner-paper`). Токен берётся в *Settings → Actions → Runners →
-New self-hosted runner*.
+Workflow использует `runs-on: ubuntu-latest` и деплоит через rsync по SSH.
+Нужно добавить Secrets в репозиторий (*Settings → Secrets and variables → Actions*):
 
-```bash
-mkdir ~/actions-runner-guildhall && cd ~/actions-runner-guildhall
-curl -o actions-runner-linux-x64.tar.gz -L <ссылка со страницы регистрации>
-tar xzf actions-runner-linux-x64.tar.gz
-./config.sh --url https://github.com/tldrpg/Guildhall --token <TOKEN>
-sudo ./svc.sh install && sudo ./svc.sh start
-```
+| Secret | Значение |
+|---|---|
+| `SSH_HOST` | IP сервера (147.45.184.251) |
+| `SSH_PORT` | Порт SSH (50505) |
+| `SSH_USER` | Пользователь на сервере (shakusky) |
+| `SSH_KEY` | Приватный SSH-ключ |
+
+На сервере добавить публичный ключ в `~/.ssh/authorized_keys`.
 
 **5. Редирект со старого адреса Anima (необязательно)**
 
@@ -122,7 +121,7 @@ Workflow берёт каталог из переменной репозитор�
 
 ## Первая выкладка вручную
 
-Чтобы проверить nginx до настройки раннера:
+Чтобы проверить nginx до настройки CI/CD:
 
 ```bash
 npm ci && npm run build && npm run check:links

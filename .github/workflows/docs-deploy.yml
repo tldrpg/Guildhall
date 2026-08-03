@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
@@ -21,9 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Full history: Starlight derives each page's "last updated" date from the
-          # git log of that file. A shallow clone would stamp every page with the
-          # date of the single fetched commit, in the footer and in the JSON-LD.
           fetch-depth: 0
 
       - name: Use Node.js
@@ -44,19 +41,25 @@ jobs:
       - name: Check structured data
         run: npm run check:jsonld
 
-      - name: Upload
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy
         env:
-          # Served by nginx at https://longstoryshort.app/doc/
-          # Kept outside the app's webroot: the Long Story Short deploy rsyncs with
-          # --delete and would otherwise wipe the docs on every release.
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
           TARGET: ${{ vars.DOCS_WWW_PATH || '/var/www/lss-doc/doc' }}
         run: |
           set -euo pipefail
-          # rsync --delete into a wrong or empty path would be destructive.
           case "$TARGET" in
             /var/www/?*) ;;
             *) echo "Refusing to deploy to '$TARGET'"; exit 1 ;;
           esac
           test -d dist
-          mkdir -p "$TARGET"
-          rsync -ahW --no-compress --delete "dist/" "$TARGET/"
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p $TARGET"
+          rsync -ahW --no-compress --delete \
+            -e "ssh -p $SSH_PORT" \
+            "dist/" "$SSH_USER@$SSH_HOST:$TARGET/"
