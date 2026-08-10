@@ -61,13 +61,13 @@ source.onRoll((roll) => {
     const variant = rollVariant(roll);       // 'info' | 'success' | 'warning'
 
     myVTT.notification.show(message, variant);
-    myVTT.room.broadcast(JSON.stringify({ type: 'dnd:roll', payload: roll }));
+    myVTT.room.broadcast(JSON.stringify({ type: 'lss:roll', payload: roll }));
 });
 
 // 3. Принять рассылку от других игроков и показать её локально
 myVTT.room.onBroadcast((raw) => {
     const event = JSON.parse(raw);
-    if (event.type === 'dnd:roll') {
+    if (event.type === 'lss:roll') {
         myVTT.notification.show(
             formatRollMessage(event.payload),
             rollVariant(event.payload),
@@ -117,7 +117,7 @@ void adapter.ready().then((ok) => {
         // Локальный тост для того, кто бросил (рассылка OBR — только для остальных).
         adapter.notify(formatRollMessage(roll), rollVariant(roll));
         // Разослать всем остальным клиентам в комнате.
-        adapter.broadcast({ type: 'dnd:roll', payload: roll });
+        adapter.broadcast({ type: 'lss:roll', payload: roll });
         // Попробовать разместить плавающую подпись над выбранным токеном.
         void adapter.labelOverSelection(roll.total).then((placed) => {
             if (!placed) {
@@ -128,7 +128,7 @@ void adapter.ready().then((ok) => {
 
     // Показать броски, разосланные другими игроками.
     source.onEvent((event) => {
-        if (event.type === 'dnd:roll') {
+        if (event.type === 'lss:roll') {
             adapter.notify(formatRollMessage(event.payload), rollVariant(event.payload));
         }
     });

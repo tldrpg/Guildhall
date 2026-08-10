@@ -32,12 +32,12 @@ source.onRoll((roll) => {
     const variant = rollVariant(roll);
 
     myVTT.notification.show(message, variant);
-    myVTT.room.broadcast(JSON.stringify({ type: 'dnd:roll', payload: roll }));
+    myVTT.room.broadcast(JSON.stringify({ type: 'lss:roll', payload: roll }));
 });
 
 myVTT.room.onBroadcast((raw) => {
     const event = JSON.parse(raw);
-    if (event.type === 'dnd:roll') {
+    if (event.type === 'lss:roll') {
         myVTT.notification.show(formatRollMessage(event.payload), rollVariant(event.payload));
     }
 });
