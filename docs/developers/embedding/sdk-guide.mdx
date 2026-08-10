@@ -187,9 +187,16 @@ if (!delivered) {
 | `dnd:manifest` | 🧪 зарезервировано | лист → хост | `CapabilityManifest` |
 | `dnd:health` | 🧪 зарезервировано | лист → хост | `HealthChangedPayload` |
 | `dnd:command` | 🧪 зарезервировано | хост → лист | `CapabilityOperation` |
+| `lss:group-selected` | 🧪 зарезервировано | страница группы → хост | `GroupSelectedPayload` |
+| `dnd:group-code` | 🧪 зарезервировано | хост → лист | `GroupCodePayload` |
+| `dnd:group-status` | 🧪 зарезервировано | лист → хост | `GroupStatusPayload` |
 
 Зарезервированные события типизированы и проведены сквозь лист, но API на стороне
 моста считается экспериментальным и может измениться до стабилизации.
+
+Последние три (с 0.6.0) обслуживают общие права за столом и вне этого сценария не
+встречаются — весь флоу описан отдельно:
+[Общие права за столом](/doc/developers/embedding/groups/).
 
 ## Утилиты
 

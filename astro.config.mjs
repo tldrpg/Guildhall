@@ -220,6 +220,7 @@ export default defineConfig({
                                 label: 'Встраивание листа',
                                 items: [
                                     { slug: 'developers/embedding', label: 'Как встроить лист' },
+                                    { slug: 'developers/embedding/groups', label: 'Общие права за столом' },
                                     { slug: 'developers/embedding/sdk-guide', label: 'Справочник SDK' },
                                     { slug: 'developers/embedding/bridge', label: 'Мосты для VTT' },
                                     { slug: 'developers/embedding/bridge-guide', label: 'Справочник моста' },
