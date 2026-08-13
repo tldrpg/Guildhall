@@ -141,6 +141,7 @@ export default defineConfig({
                                 items: [
                                     { slug: 'misc/character-creation', label: 'Как заполнять лист персонажа?' },
                                     { slug: 'misc/aime', label: 'Приключения в Средиземье' },
+                                    { slug: 'misc/adventure-submission', label: 'Предложить приключение' },
                                     { slug: 'misc/links', label: 'Полезные ссылки' },
                                     { slug: 'misc/license', label: 'Лицензия' },
                                 ],
