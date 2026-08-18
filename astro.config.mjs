@@ -229,7 +229,7 @@ export default defineConfig({
                             },
                             { slug: 'developers/datasets', label: 'Датасеты' },
                             { slug: 'developers/characters', label: 'Формат персонажа' },
-                            { slug: 'developers/changelog', label: 'Что изменилось' },
+                            { slug: 'developers/changelog', label: 'Changelog' },
                             { slug: 'developers/contribute', label: 'Как помочь проекту' },
                         ],
                     },
