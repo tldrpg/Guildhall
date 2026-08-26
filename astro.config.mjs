@@ -227,6 +227,7 @@ export default defineConfig({
                                     { slug: 'developers/embedding/bridge-guide', label: 'Справочник моста' },
                                 ],
                             },
+                            { slug: 'developers/embedding/tools', label: 'Встраивание инструментов' },
                             { slug: 'developers/datasets', label: 'Датасеты' },
                             { slug: 'developers/characters', label: 'Формат персонажа' },
                             { slug: 'developers/changelog', label: 'Changelog' },
