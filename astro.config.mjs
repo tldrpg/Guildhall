@@ -105,6 +105,11 @@ export default defineConfig({
                                     { slug: 'character-sheet/multiclass', label: 'Мультикласс' },
                                     { slug: 'character-sheet/bonuses', label: 'Система бонусов' },
                                     { slug: 'character-sheet/expression-input', label: 'Поля с формулами' },
+                                    { slug: 'character-sheet/notation', label: 'Нотация формул' },
+                                    {
+                                        slug: 'character-sheet/advantage-disadvantage',
+                                        label: 'Преимущество и заряженная дайсница',
+                                    },
                                     { slug: 'character-sheet/translations', label: 'Переводы' },
                                 ],
                             },
@@ -158,10 +163,6 @@ export default defineConfig({
                                     {
                                         slug: 'character-sheet/discord',
                                         label: 'Пресеты Discord',
-                                    },
-                                    {
-                                        slug: 'character-sheet/advantage-disadvantage',
-                                        label: 'Преимущество/Помеха',
                                     },
                                 ],
                             },
