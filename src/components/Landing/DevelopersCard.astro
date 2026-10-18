@@ -1,0 +1,74 @@
+---
+// The way into /doc/developers/ from the landing page. Deliberately smaller than
+// a ProductCard: it is not a fourth product, it is the section for people who
+// build on top of the three. Same surface and radius as the product cards so it
+// reads as part of the same grid; no glyph, no accent stripe — just the same
+// puzzle icon the section carries in the sidebar topic switcher.
+import { Icon } from '@astrojs/starlight/components';
+---
+
+<article class="dev-card">
+    <Icon name="puzzle" size="1.75rem" class="dev-icon" />
+    <div class="dev-text">
+        <h2>
+            <a href="/doc/developers/">Разработчикам</a>
+        </h2>
+        <p>Встраивание листа в свой стол, форматы датасетов и персонажа, changelog.</p>
+    </div>
+</article>
+
+<style>
+    .dev-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 1rem;
+        background: var(--sl-color-gray-6);
+        transition: border-color 0.15s ease;
+
+        margin-top: 0 !important;
+    }
+
+    .dev-card:hover {
+        border-color: var(--sl-color-gray-3);
+    }
+
+    .dev-card :global(.dev-icon) {
+        flex-shrink: 0;
+        color: var(--sl-color-gray-3);
+    }
+
+    .dev-text {
+        min-width: 0;
+    }
+
+    h2 {
+        margin: 0;
+        font-family: var(--lss-display);
+        font-size: var(--sl-text-lg);
+        line-height: 1.2;
+    }
+
+    h2 a {
+        color: var(--sl-color-white);
+        text-decoration: none;
+    }
+
+    /* Whole card clickable, as with ProductCard. */
+    h2 a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 1rem;
+    }
+
+    p {
+        margin: 0.25rem 0 0;
+        font-size: var(--sl-text-sm);
+        line-height: 1.5;
+        color: var(--sl-color-gray-3);
+    }
+</style>

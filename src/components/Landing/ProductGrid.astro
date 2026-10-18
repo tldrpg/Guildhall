@@ -3,6 +3,7 @@ import ProductCard from './ProductCard.astro';
 import SheetGlyph from './glyphs/SheetGlyph.astro';
 import AnimaGlyph from './glyphs/AnimaGlyph.astro';
 import VortexGlyph from './glyphs/VortexGlyph.astro';
+import DevelopersCard from './DevelopersCard.astro';
 ---
 
 <div class="grid">
@@ -46,6 +47,8 @@ import VortexGlyph from './glyphs/VortexGlyph.astro';
     >
         <VortexGlyph slot="glyph" />
     </ProductCard>
+
+    <DevelopersCard />
 </div>
 
 <style>
@@ -59,5 +62,10 @@ import VortexGlyph from './glyphs/VortexGlyph.astro';
 
     .grid > :global(.card) {
         flex: 1 1 16rem;
+    }
+
+    /* Own row under the three products, full width at any breakpoint. */
+    .grid > :global(.dev-card) {
+        flex: 1 1 100%;
     }
 </style>
