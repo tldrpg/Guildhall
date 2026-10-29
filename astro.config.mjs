@@ -104,6 +104,7 @@ export default defineConfig({
                                     { slug: 'character-sheet/print', label: 'Скачать PDF' },
                                     { slug: 'character-sheet/multiclass', label: 'Мультикласс' },
                                     { slug: 'character-sheet/bonuses', label: 'Система бонусов' },
+                                    { slug: 'character-sheet/effects', label: 'Эффекты и состояния' },
                                     { slug: 'character-sheet/expression-input', label: 'Поля с формулами' },
                                     { slug: 'character-sheet/notation', label: 'Нотация формул' },
                                     {
